@@ -1,0 +1,7 @@
+{
+    "vertexFile" : "resources/materials/shaders/complex.vs",
+    "fragmentFile" : "resources/materials/shaders/glass.fs",
+    "params" : {
+
+    }
+}

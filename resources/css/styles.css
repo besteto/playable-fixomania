@@ -1,0 +1,29 @@
+body    { color: black; }
+canvas  { display: block; }
+.parent {
+    position: relative;
+    height: 0;
+    padding-bottom: 56.25%;
+}
+.child {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+#l-dock {
+    position: absolute;
+    top:  5px;
+    left: 5px;
+    z-index: 1;
+}
+
+#r-dock {
+    position: absolute;
+    top:  5px;
+    right: 5px;
+    z-index: 1;
+}
+
