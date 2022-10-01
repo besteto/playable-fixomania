@@ -4,51 +4,48 @@ W4_USE_UNSTRICT_INTERFACE
 
 struct CarPart
 {
-    CarPart() = default;
-    CarPart(sptr<Node> root, const std::string& name, const sptr<MaterialInst>& mat)
-    {
-        W4_LOG_DEBUG("create part : %s", name.c_str());
-        if(name.find("::") != std::string::npos)
+    public:
+        CarPart() = default;
+        CarPart(sptr<Node> root, const std::string& name, const sptr<MaterialInst>& mat)
         {
-           sptr<Node> current_root = root;
-           sptr<Node> current_node;
+            W4_LOG_DEBUG("create part : %s", name.c_str());
+            if(name.find("::") != std::string::npos)
+            {
+                sptr<Node> current_root = root;
+                sptr<Node> current_node;
 
-           for(auto const& path : utils::split(name, "::"))
-           {
-                 current_node = current_root->getChild<Node>(path);
-                 current_root = current_node;
-           }
-           m_mesh = current_node->as<Mesh>();
+                for(auto const& path : utils::split(name, "::"))
+                {
+                    current_node = current_root->getChild<Node>(path);
+                    current_root = current_node;
+                }
+                m_mesh = current_node->as<Mesh>();
+            }
+            else
+                m_mesh = root->getChild<Mesh>(name);
+
+            m_mesh->setMaterialInst(mat);
         }
-        else
-            m_mesh = root->getChild<Mesh>(name);
+        void show() {m_mesh->setEnabled(true);}
+        void hide() {m_mesh->setEnabled(false);}
+        void setMat(const sptr<MaterialInst> &mat) {m_mesh->setMaterialInst(mat);}
 
-        m_mesh->setMaterialInst(mat);
-    }
-    void show() {m_mesh->setEnabled(true);}
-    void hide() {m_mesh->setEnabled(false);}
-    void setMat(const sptr<MaterialInst> &mat) {m_mesh->setMaterialInst(mat);}
+        static  sptr<CarPart>  create(sptr<Node> root, const std::string& name, sptr<MaterialInst> mat)
+        {
+            m_parts[name] = std::make_shared<CarPart>(root, name, mat);
+            return m_parts[name];
+        }
+        static sptr<CarPart> get(const std::string& name )
+        {
+            return m_parts[name];
+        }
 
-    static  sptr<CarPart>  create(sptr<Node> root, const std::string& name, sptr<MaterialInst> mat)
-    {
-        m_parts[name] = std::make_shared<CarPart>(root, name, mat);
-        return m_parts[name];
-    }
-    static sptr<CarPart> get(const std::string& name )
-    {
-        return m_parts[name];
-    }
-  private:
-    sptr<Mesh>  m_mesh;
-    static std::unordered_map<std::string, sptr<CarPart>> m_parts;
+    private:
+        sptr<Mesh>  m_mesh;
+        static std::unordered_map<std::string, sptr<CarPart>> m_parts;
 };
 
 std::unordered_map<std::string, sptr<CarPart>> CarPart::m_parts;
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +70,8 @@ public:
         createCallbacks();
     }
 
-    void setupScene() {
+    void setupScene()
+    {
         auto root = Asset::load(core::Path("resources/assets/car", "car.asset"))->getRoot();
         root->log();
 
@@ -86,36 +84,37 @@ public:
         m_root->addChild(root);
 
         auto background = Mesh::create::plane({1080.f, 1920.f});
-            background->setLocalTranslation({0.0f, 35.0f, 590.f});
-            background->setWorldRotation(Rotator(0.11f, 0.f, 0.f));
-            background->setMaterialInst(m_mats["background"]);
-            m_root->addChild(background);
+        background->setLocalTranslation({0.0f, 35.0f, 590.f});
+        background->setWorldRotation(Rotator(0.11f, 0.f, 0.f));
+        background->setMaterialInst(m_mats["background"]);
+        m_root->addChild(background);
 
         Render::getPass(0)->setRoot(m_root);
     }
 
-    void setupCamera() {
+    void setupCamera()
+    {
         auto cam = Render::getScreenCamera();
-            cam->setWorldTranslation({0.f, 180.f, -725.f});
-            cam->setFov(44.f);
-            cam->setAspect(1080.f / 1920.f);
-            cam->setFar(10000.f);
-            cam->setClearColor(math::vec4(.38f, .82f, .98f, 1.f));
-            cam->setClearMask(ClearMask::Color | ClearMask::Depth );
-            cam->setWorldRotation(Rotator(0.11f, 0.f, 0.f));
+        cam->setWorldTranslation({0.f, 180.f, -725.f});
+        cam->setFov(44.f);
+        cam->setAspect(1080.f / 1920.f);
+        cam->setFar(10000.f);
+        cam->setClearColor(math::vec4(.38f, .82f, .98f, 1.f));
+        cam->setClearMask(ClearMask::Color | ClearMask::Depth );
+        cam->setWorldRotation(Rotator(0.11f, 0.f, 0.f));
     }
 
     sptr<gui::Image> createButton(
-        sptr<gui::Widget> root,
-        const char* image,
-        uint height, uint width, int posx,  int posy,
-        gui::VerticalAlign va, gui::HorizontalAlign ha,
-        const std::function<void(void)>& tapCallback)
+            sptr<gui::Widget> root,
+            const char* image,
+            uint height, uint width, int posx,  int posy,
+            gui::VerticalAlign va, gui::HorizontalAlign ha,
+            const std::function<void(void)>& tapCallback)
     {
         auto widget = gui::createWidget<gui::Image>(root, image, width, height, posx, posy, "button");
-             widget->setVerticalAlign(va);
-             widget->setHorizontalAlign(ha);
-             widget->onTap(tapCallback);
+        widget->setVerticalAlign(va);
+        widget->setHorizontalAlign(ha);
+        widget->onTap(tapCallback);
         return widget;
     }
 
@@ -176,85 +175,85 @@ public:
         W4_LOG_INFO("so the light_02 pos is %f, %f, %f", lightPos2.x, lightPos2.y, lightPos2.z);
 
         auto cubemap = Cubemap::load({
-             "resources/textures/Garage_cubeCam_3.png",
-             "resources/textures/Garage_cubeCam_4.png",
-             "resources/textures/Garage_cubeCam_6.png",
-             "resources/textures/Garage_cubeCam_5.png",
-             "resources/textures/Garage_cubeCam_1.png",
-             "resources/textures/Garage_cubeCam_2.png",});
+                                             "resources/textures/Garage_cubeCam_3.png",
+                                             "resources/textures/Garage_cubeCam_4.png",
+                                             "resources/textures/Garage_cubeCam_6.png",
+                                             "resources/textures/Garage_cubeCam_5.png",
+                                             "resources/textures/Garage_cubeCam_1.png",
+                                             "resources/textures/Garage_cubeCam_2.png",});
 
         auto glassColor = math::vec4(.16f, 0.19f, 0.16f, 1.f);
         auto carColor = math::vec4(.38f, .82f, .98f, 1.f);
 
         m_mats["podium"] = Material::get("resources/materials/podium.mat")->createInstance();
-            m_mats["podium"]->setParam("lightPos", lightPos1);
-            m_mats["podium"]->setParam("reflectCoef", 0.2f);
-            m_mats["podium"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
-            m_mats["podium"] ->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/PodiumDiffuse.png"));
-            m_mats["podium"]->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/PodiumSpecular.png"));
+        m_mats["podium"]->setParam("lightPos", lightPos1);
+        m_mats["podium"]->setParam("reflectCoef", 0.2f);
+        m_mats["podium"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["podium"] ->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/PodiumDiffuse.png"));
+        m_mats["podium"]->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/PodiumSpecular.png"));
 
         m_mats["body"] = Material::get("resources/materials/body.mat")->createInstance();
-            m_mats["body"]->setParam("color", carColor);
-            m_mats["body"]->setParam("lightPos", lightPos1);
-            m_mats["body"]->setParam("reflectCoef", 0.2f);
-            m_mats["body"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["body"]->setParam("color", carColor);
+        m_mats["body"]->setParam("lightPos", lightPos1);
+        m_mats["body"]->setParam("reflectCoef", 0.2f);
+        m_mats["body"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
 
         m_mats["bad_body"] = Material::get("resources/materials/bad_body.mat")->createInstance();
-            m_mats["bad_body"]->setParam("color", carColor);
-            m_mats["bad_body"]->setParam("lightPos", lightPos1);
-            m_mats["bad_body"]->setParam("reflectCoef", 0.2f);
-            m_mats["bad_body"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["bad_body"]->setParam("color", carColor);
+        m_mats["bad_body"]->setParam("lightPos", lightPos1);
+        m_mats["bad_body"]->setParam("reflectCoef", 0.2f);
+        m_mats["bad_body"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
 
         m_mats["glass"] = Material::get("resources/materials/body.mat")->createInstance();
-            m_mats["glass"]->setParam("color", glassColor);
-            m_mats["glass"]->setParam("lightPos", lightPos1);
-            m_mats["glass"]->setParam("reflectCoef", 0.5f);
-            m_mats["glass"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["glass"]->setParam("color", glassColor);
+        m_mats["glass"]->setParam("lightPos", lightPos1);
+        m_mats["glass"]->setParam("reflectCoef", 0.5f);
+        m_mats["glass"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
 
         m_mats["glass_side_bad"] = Material::get("resources/materials/bad_body.mat")->createInstance();
-            m_mats["glass_side_bad"]->setParam("color", glassColor);
-            m_mats["glass_side_bad"]->setParam("lightPos", lightPos1);
-            m_mats["glass_side_bad"]->setParam("reflectCoef", 0.5f);
-            m_mats["glass_side_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["glass_side_bad"]->setParam("color", glassColor);
+        m_mats["glass_side_bad"]->setParam("lightPos", lightPos1);
+        m_mats["glass_side_bad"]->setParam("reflectCoef", 0.5f);
+        m_mats["glass_side_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
 
         m_mats["glass_o"] = Material::get("resources/materials/glass.mat")->createInstance();
-            m_mats["glass_o"]->setParam("color", glassColor);
-            m_mats["glass_o"]->setParam("lightPos", lightPos1);
-            m_mats["glass_o"]->setParam("opacity", m_opacity/100.f);
+        m_mats["glass_o"]->setParam("color", glassColor);
+        m_mats["glass_o"]->setParam("lightPos", lightPos1);
+        m_mats["glass_o"]->setParam("opacity", m_opacity/100.f);
 //            m_mats["glass_o"]->setBlendFunc(render::BlendFactor::SRC_ALPHA, render::BlendFactor::ONE_MINUS_SRC_ALPHA);
-            m_mats["glass_o"]->enableBlending(true);
+        m_mats["glass_o"]->enableBlending(true);
 
         m_mats["front_glass_bad"] = Material::get("resources/materials/texture_wlight.mat")->createInstance();
-            m_mats["front_glass_bad"]->setParam("color", glassColor);
-            m_mats["front_glass_bad"]->setParam("lightPos", lightPos1);
-            m_mats["front_glass_bad"]->setParam("reflectCoef", 0.5f);
-            m_mats["front_glass_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
-            m_mats["front_glass_bad"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarBadShader.png"));
+        m_mats["front_glass_bad"]->setParam("color", glassColor);
+        m_mats["front_glass_bad"]->setParam("lightPos", lightPos1);
+        m_mats["front_glass_bad"]->setParam("reflectCoef", 0.5f);
+        m_mats["front_glass_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["front_glass_bad"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarBadShader.png"));
         m_mats["left_door_bad"] = Material::get("resources/materials/texture_wlight.mat")->createInstance();
-            m_mats["left_door_bad"]->setParam("color", carColor);
-            m_mats["left_door_bad"]->setParam("lightPos", lightPos1);
-            m_mats["left_door_bad"]->setParam("reflectCoef", 0.2f);
-            m_mats["left_door_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
-            m_mats["left_door_bad"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarBadShader.png"));
+        m_mats["left_door_bad"]->setParam("color", carColor);
+        m_mats["left_door_bad"]->setParam("lightPos", lightPos1);
+        m_mats["left_door_bad"]->setParam("reflectCoef", 0.2f);
+        m_mats["left_door_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["left_door_bad"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarBadShader.png"));
 
         m_mats["main_mat"] = Material::get("resources/materials/complex.mat")->createInstance();
-            m_mats["main_mat"]->setParam("lightPos", lightPos1);
-            m_mats["main_mat"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
-            m_mats["main_mat"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarDiffuse.png"));
-            m_mats["main_mat"]->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/CarSpecular.png"));
-            m_mats["main_mat"] ->setTexture(TextureId::TEXTURE_3, Texture::get("resources/textures/CarRoughness.png"));
+        m_mats["main_mat"]->setParam("lightPos", lightPos1);
+        m_mats["main_mat"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["main_mat"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarDiffuse.png"));
+        m_mats["main_mat"]->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/CarSpecular.png"));
+        m_mats["main_mat"] ->setTexture(TextureId::TEXTURE_3, Texture::get("resources/textures/CarRoughness.png"));
 
         m_mats["main_mat_bad"] = Material::get("resources/materials/bad_complex.mat")->createInstance();
-            m_mats["main_mat_bad"]->setParam("lightPos", lightPos1);
-            m_mats["main_mat_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
-            m_mats["main_mat_bad"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarDiffuse.png"));
-            m_mats["main_mat_bad"]->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/CarSpecular.png"));
-            m_mats["main_mat_bad"] ->setTexture(TextureId::TEXTURE_3, Texture::get("resources/textures/CarRoughness.png"));
+        m_mats["main_mat_bad"]->setParam("lightPos", lightPos1);
+        m_mats["main_mat_bad"]->setCubemap(CubemapId::CUBEMAP_0, cubemap);
+        m_mats["main_mat_bad"]->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/CarDiffuse.png"));
+        m_mats["main_mat_bad"]->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/CarSpecular.png"));
+        m_mats["main_mat_bad"] ->setTexture(TextureId::TEXTURE_3, Texture::get("resources/textures/CarRoughness.png"));
 
         m_mats["background"] = Material::get("resources/materials/background.mat")->createInstance();
-            m_mats["background"] ->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/Background.jpg"));
-            m_mats["background"] ->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/BackgroundDOF_light.png"));
-            m_mats["background"] ->setTexture(TextureId::TEXTURE_2, Texture::get("resources/textures/BackgroundDOF_specLight.png"));
+        m_mats["background"] ->setTexture(TextureId::TEXTURE_0, Texture::get("resources/textures/Background.jpg"));
+        m_mats["background"] ->setTexture(TextureId::TEXTURE_1, Texture::get("resources/textures/BackgroundDOF_light.png"));
+        m_mats["background"] ->setTexture(TextureId::TEXTURE_2, Texture::get("resources/textures/BackgroundDOF_specLight.png"));
     }
 
     void createParts(sptr<Node> root)
@@ -367,9 +366,10 @@ public:
 
     }
 
-    void addDiscount() {
-
-        if (m_discontPoints < 7) {
+    void addDiscount()
+    {
+        if (m_discontPoints < 7)
+        {
             ++m_discontPoints;
             W4_LOG_INFO("Your discount now is %d percent!", m_discontPoints*5);
             imageCurrentDiscount->setImage(m_images[m_discontPoints]);
@@ -378,10 +378,11 @@ public:
         if (m_discontPoints == 7){OnWin(m_discontPoints);}
     }
 
-   void OnWin(int numb)
+    void OnWin(int numb)
     {
         imageReplay->setVisible(true);
     }
+
     void OnReplay()
     {
         m_discontPoints = 0;
@@ -390,7 +391,8 @@ public:
         BrokeThemAll();
     }
 
-    void BrokeThemAll() {
+    void BrokeThemAll()
+    {
         CarPart::get("glass_side_bad")->show();
         CarPart::get("glass_side_fixed")->hide();
 
@@ -415,13 +417,7 @@ public:
         CarPart::get("glass_front_fixed")->hide();
     }
 
-    void OnTap(event::Touch::Begin::cref e)
-    {
-
-    }
-
     void onKey(const event::Keyboard::Down& evt) override
-
     {
         switch(evt.key)
         {
@@ -471,9 +467,9 @@ public:
     }
 
     void OnSwipe(event::Swipe::cref e)
-    {
-
-    }
+    {    }
+    void OnTap(event::Touch::Begin::cref e)
+    {    }
 
     void onUpdate(float dt) override
     {
@@ -488,7 +484,6 @@ public:
         }
     }
 
-
 private:
 
     sptr<RootNode>  m_root;
@@ -497,14 +492,14 @@ private:
     std::unordered_map<std::string, sptr<CarPart>>      m_parts;
     std::unordered_map<std::string, sptr<MaterialInst>> m_mats;
     std::string m_images[8] = {
-        "resources/ui/0_panel.png",
-        "resources/ui/5_panel.png",
-        "resources/ui/10_panel.png",
-        "resources/ui/15_panel.png",
-        "resources/ui/20_panel.png",
-        "resources/ui/25_panel.png",
-        "resources/ui/30_panel.png",
-        "resources/ui/35_panel.png"
+            "resources/ui/0_panel.png",
+            "resources/ui/5_panel.png",
+            "resources/ui/10_panel.png",
+            "resources/ui/15_panel.png",
+            "resources/ui/20_panel.png",
+            "resources/ui/25_panel.png",
+            "resources/ui/30_panel.png",
+            "resources/ui/35_panel.png"
     };
 
     bool isMove;
